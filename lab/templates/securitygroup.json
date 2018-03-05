@@ -1,0 +1,927 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "securitygroup.json - Template for the security groups.",
+  "Parameters": {
+    "Environment": {
+      "Default": "Development",
+      "Type": "String",
+      "Description": "Application environment for which this network is being created. e.g. Development/Production.",
+      "AllowedValues": [
+        "Development",
+        "Integration",
+        "PreProduction",
+        "Production",
+        "QA",
+        "Staging",
+        "Test"
+      ]
+    },
+    "VPCID": {
+      "Type": "AWS::EC2::VPC::Id",
+      "Description": "Select Virtual Private Cloud ID."
+    }
+  },
+  "Resources": {
+    "CustomerFacingWebELBsg": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [
+          {
+            "ToPort": 80,
+            "IpProtocol": "tcp",
+            "CidrIp": "0.0.0.0/0",
+            "FromPort": 80
+          },
+          {
+            "ToPort": 443,
+            "IpProtocol": "tcp",
+            "CidrIp": "0.0.0.0/0",
+            "FromPort": 443
+          }
+        ],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow External traffic.",
+        "Tags": [
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          },
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "${Environment}-CustomerFacingWebELBsg"
+            }
+          },
+          {
+            "Key": "ServiceProvider",
+            "Value": "Rackspace"
+          }
+        ]
+      }
+    },
+    "BackOfficeWebELBsg": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [
+          {
+            "ToPort": 80,
+            "IpProtocol": "tcp",
+            "CidrIp": "0.0.0.0/0",
+            "FromPort": 80
+          },
+          {
+            "ToPort": 443,
+            "IpProtocol": "tcp",
+            "CidrIp": "0.0.0.0/0",
+            "FromPort": 443
+          }
+        ],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow External traffic.",
+        "Tags": [
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          },
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "${Environment}-BackOfficeWebELBsg"
+            }
+          },
+          {
+            "Key": "ServiceProvider",
+            "Value": "Rackspace"
+          }
+        ]
+      }
+    },
+    "CustomerFacingHybrisELBsg": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [
+          {
+            "ToPort": 9001,
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "CustomerFacingWebASGsg"
+            },
+            "FromPort": 9001
+          },
+          {
+            "ToPort": 9002,
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "CustomerFacingWebASGsg"
+            },
+            "FromPort": 9002
+          }
+        ],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow Web-ELB traffic.",
+        "Tags": [
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          },
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "${Environment}-CustomerFacingHybrisELBsg"
+            }
+          },
+          {
+            "Key": "ServiceProvider",
+            "Value": "Rackspace"
+          }
+        ]
+      }
+    },
+    "BackOfficeHybrisELBsg": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [
+          {
+            "ToPort": 9001,
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "BackOfficeWebASGsg"
+            },
+            "FromPort": 9001
+          },
+          {
+            "ToPort": 9002,
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "BackOfficeWebASGsg"
+            },
+            "FromPort": 9002
+          }
+        ],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow Web-ELB traffic.",
+        "Tags": [
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          },
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "${Environment}-BackOfficeHybrisELBsg"
+            }
+          },
+          {
+            "Key": "ServiceProvider",
+            "Value": "Rackspace"
+          }
+        ]
+      }
+    },
+    "SolrSlaveELBsg": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [
+          {
+            "ToPort": 8983,
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "CustomerFacingHybrisARsg"
+            },
+            "FromPort": 8983
+          },
+          {
+            "ToPort": 8984,
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "BackOfficeHybrisARsg"
+            },
+            "FromPort": 8984
+          },
+          {
+            "ToPort": 8984,
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "CustomerFacingHybrisARsg"
+            },
+            "FromPort": 8984
+          },
+          {
+            "ToPort": 8983,
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "BackOfficeHybrisARsg"
+            },
+            "FromPort": 8983
+          }
+        ],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow Hybris-App traffic.",
+        "Tags": [
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          },
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "${Environment}-SolrSlaveELBsg"
+            }
+          },
+          {
+            "Key": "ServiceProvider",
+            "Value": "Rackspace"
+          }
+        ]
+      }
+    },
+    "RabbitMQELBsg": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [
+          {
+            "ToPort": 15672,
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "CustomerFacingHybrisARsg"
+            },
+            "FromPort": 15672
+          },
+          {
+            "ToPort": 25672,
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "CustomerFacingHybrisARsg"
+            },
+            "FromPort": 25672
+          },
+          {
+            "ToPort": 5672,
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "CustomerFacingHybrisARsg"
+            },
+            "FromPort": 5671
+          },
+          {
+            "ToPort": 4369,
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "CustomerFacingHybrisARsg"
+            },
+            "FromPort": 4369
+          },
+          {
+            "ToPort": 15672,
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "BackOfficeHybrisARsg"
+            },
+            "FromPort": 15672
+          },
+          {
+            "ToPort": 25672,
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "BackOfficeHybrisARsg"
+            },
+            "FromPort": 25672
+          },
+          {
+            "ToPort": 5672,
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "BackOfficeHybrisARsg"
+            },
+            "FromPort": 5671
+          },
+          {
+            "ToPort": 4369,
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "BackOfficeHybrisARsg"
+            },
+            "FromPort": 4369
+          }
+        ],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow Web-ELB traffic.",
+        "Tags": [
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          },
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "${Environment}-RabbitMQELBsg"
+            }
+          },
+          {
+            "Key": "ServiceProvider",
+            "Value": "Rackspace"
+          }
+        ]
+      }
+    },
+    "CustomerFacingWebASGsg": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [
+          {
+            "ToPort": 80,
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "CustomerFacingWebELBsg"
+            },
+            "FromPort": 80
+          },
+          {
+            "ToPort": 443,
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "CustomerFacingWebELBsg"
+            },
+            "FromPort": 443
+          }
+        ],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow Hybris-App traffic.",
+        "Tags": [
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          },
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "${Environment}-CustomerFacingWebASGsg"
+            }
+          },
+          {
+            "Key": "ServiceProvider",
+            "Value": "Rackspace"
+          }
+        ]
+      }
+    },
+    "BackOfficeWebASGsg": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [
+          {
+            "ToPort": 80,
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "BackOfficeWebELBsg"
+            },
+            "FromPort": 80
+          },
+          {
+            "ToPort": 443,
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "BackOfficeWebELBsg"
+            },
+            "FromPort": 443
+          }
+        ],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow Hybris-App traffic.",
+        "Tags": [
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          },
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "${Environment}-BackOfficeWebASGsg"
+            }
+          },
+          {
+            "Key": "ServiceProvider",
+            "Value": "Rackspace"
+          }
+        ]
+      }
+    },
+    "CustomerFacingHybrisARsg": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [
+          {
+            "ToPort": 9002,
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "CustomerFacingHybrisELBsg"
+            },
+            "FromPort": 9001
+          }
+        ],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow Hybris-App traffic.",
+        "Tags": [
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          },
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "${Environment}-CustomerFacingHybrisARsg"
+            }
+          },
+          {
+            "Key": "ServiceProvider",
+            "Value": "Rackspace"
+          }
+        ]
+      }
+    },
+    "BackOfficeHybrisARsg": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [
+          {
+            "ToPort": 9002,
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "BackOfficeHybrisELBsg"
+            },
+            "FromPort": 9001
+          }
+        ],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow Hybris-App traffic.",
+        "Tags": [
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          },
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "${Environment}-BackOfficeHybrisARsg"
+            }
+          },
+          {
+            "Key": "ServiceProvider",
+            "Value": "Rackspace"
+          }
+        ]
+      }
+    },
+    "SolrMasterARsg": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [
+          {
+            "ToPort": 9002,
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "BackOfficeHybrisELBsg"
+            },
+            "FromPort": 9001
+          }
+        ],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow Hybris-App traffic.",
+        "Tags": [
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          },
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "${Environment}-SolrMasterARsg"
+            }
+          },
+          {
+            "Key": "ServiceProvider",
+            "Value": "Rackspace"
+          }
+        ]
+      }
+    },
+    "SolrSlaveARsg": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [
+          {
+            "ToPort": 8943,
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "SolrMasterARsg"
+            },
+            "FromPort": 8943
+          },
+          {
+            "ToPort": 8984,
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "SolrMasterARsg"
+            },
+            "FromPort": 8984
+          },
+          {
+            "ToPort": 8943,
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "SolrSlaveELBsg"
+            },
+            "FromPort": 8943
+          },
+          {
+            "ToPort": 8984,
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "SolrSlaveELBsg"
+            },
+            "FromPort": 8984
+          }
+        ],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow Hybris-App traffic.",
+        "Tags": [
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          },
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "${Environment}-SolrSlaveARsg"
+            }
+          },
+          {
+            "Key": "ServiceProvider",
+            "Value": "Rackspace"
+          }
+        ]
+      }
+    },
+    "RabbitMQARsg": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [
+          {
+            "ToPort": 15672,
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "RabbitMQELBsg"
+            },
+            "FromPort": 15672
+          },
+          {
+            "ToPort": 5672,
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "RabbitMQELBsg"
+            },
+            "FromPort": 5672
+          }
+        ],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow Hybris-App traffic.",
+        "Tags": [
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          },
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "${Environment}-RabbitMQARsg"
+            }
+          },
+          {
+            "Key": "ServiceProvider",
+            "Value": "Rackspace"
+          }
+        ]
+      }
+    },
+    "SGBasedIngress": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "RabbitMQARsg"
+        },
+        "SourceSecurityGroupId": {
+          "Ref": "RabbitMQARsg"
+        },
+        "IpProtocol": "tcp",
+        "FromPort": 5672,
+        "ToPort": 5672,
+        "Tags": [
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          },
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "${Environment}-SGBasedIngress"
+            }
+          },
+          {
+            "Key": "ServiceProvider",
+            "Value": "Rackspace"
+          }
+        ]
+      }
+    },
+    "RDSsg": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [
+          {
+            "ToPort": 3306,
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "CustomerFacingHybrisARsg"
+            },
+            "FromPort": 3306
+          },
+          {
+            "ToPort": 3306,
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "BackOfficeHybrisARsg"
+            },
+            "FromPort": 3306
+          }
+        ],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow Hybris-App traffic.",
+        "Tags": [
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          },
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "${Environment}-RDSsg"
+            }
+          },
+          {
+            "Key": "ServiceProvider",
+            "Value": "Rackspace"
+          }
+        ]
+      }
+    },
+    "EFSsg": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [
+          {
+            "ToPort": 2049,
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "CustomerFacingWebASGsg"
+            },
+            "FromPort": 2049
+          },
+          {
+            "ToPort": 2049,
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "SolrMasterARsg"
+            },
+            "FromPort": 2049
+          },
+          {
+            "ToPort": 2049,
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "CustomerFacingHybrisARsg"
+            },
+            "FromPort": 2049
+          },
+          {
+            "ToPort": 2049,
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "BackOfficeHybrisARsg"
+            },
+            "FromPort": 2049
+          },
+          {
+            "ToPort": 2049,
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "RabbitMQARsg"
+            },
+            "FromPort": 2049
+          }
+        ],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow Hybris-App traffic.",
+        "Tags": [
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          },
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "${Environment}-EFSsg"
+            }
+          },
+          {
+            "Key": "ServiceProvider",
+            "Value": "Rackspace"
+          }
+        ]
+      }
+    }
+  },
+  "Outputs": {
+    "CustomerFacingWebELBsg": {
+      "Value": {
+        "Fn::GetAtt": [
+          "CustomerFacingWebELBsg",
+          "GroupId"
+        ]
+      }
+    },
+    "BackOfficeWebELBsg": {
+      "Value": {
+        "Fn::GetAtt": [
+          "BackOfficeWebELBsg",
+          "GroupId"
+        ]
+      }
+    },
+    "CustomerFacingHybrisELBsg": {
+      "Value": {
+        "Fn::GetAtt": [
+          "CustomerFacingHybrisELBsg",
+          "GroupId"
+        ]
+      }
+    },
+    "BackOfficeHybrisELBsg": {
+      "Value": {
+        "Fn::GetAtt": [
+          "BackOfficeHybrisELBsg",
+          "GroupId"
+        ]
+      }
+    },
+    "CustomerFacingHybrisARsg": {
+      "Value": {
+        "Fn::GetAtt": [
+          "CustomerFacingHybrisARsg",
+          "GroupId"
+        ]
+      }
+    },
+    "BackOfficeHybrisARsg": {
+      "Value": {
+        "Fn::GetAtt": [
+          "BackOfficeHybrisARsg",
+          "GroupId"
+        ]
+      }
+    },
+    "SolrSlaveELBsg": {
+      "Value": {
+        "Fn::GetAtt": [
+          "SolrSlaveELBsg",
+          "GroupId"
+        ]
+      }
+    },
+    "RabbitMQELBsg": {
+      "Value": {
+        "Fn::GetAtt": [
+          "RabbitMQELBsg",
+          "GroupId"
+        ]
+      }
+    },
+    "CustomerFacingWebASGsg": {
+      "Value": {
+        "Fn::GetAtt": [
+          "CustomerFacingWebASGsg",
+          "GroupId"
+        ]
+      }
+    },
+    "BackOfficeWebASGsg": {
+      "Value": {
+        "Fn::GetAtt": [
+          "BackOfficeWebASGsg",
+          "GroupId"
+        ]
+      }
+    },
+    "SolrSlaveARsg": {
+      "Value": {
+        "Fn::GetAtt": [
+          "SolrSlaveARsg",
+          "GroupId"
+        ]
+      }
+    },
+    "SolrMasterARsg": {
+      "Value": {
+        "Fn::GetAtt": [
+          "SolrMasterARsg",
+          "GroupId"
+        ]
+      }
+    },
+    "RabbitMQARsg": {
+      "Value": {
+        "Fn::GetAtt": [
+          "RabbitMQARsg",
+          "GroupId"
+        ]
+      }
+    },
+    "RDSsg": {
+      "Value": {
+        "Fn::GetAtt": [
+          "RDSsg",
+          "GroupId"
+        ]
+      }
+    },
+    "EFSsg": {
+      "Value": {
+        "Fn::GetAtt": [
+          "EFSsg",
+          "GroupId"
+        ]
+      }
+    }
+  }
+}
